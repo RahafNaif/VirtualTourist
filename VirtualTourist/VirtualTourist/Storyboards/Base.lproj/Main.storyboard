@@ -29,6 +29,7 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <navigationItem key="navigationItem" id="lrR-w1-WHW"/>
                     <connections>
                         <outlet property="mapView" destination="qlr-CH-BpB" id="vKX-0Q-Pa6"/>
                         <segue destination="5Nz-dG-2ei" kind="show" identifier="PhotoAlbum" id="pPf-YE-vVZ"/>
@@ -58,7 +59,7 @@
         <!--Photo Album View Controller-->
         <scene sceneID="dyF-6N-q43">
             <objects>
-                <viewController storyboardIdentifier="PhotoAlbumViewController" id="NcS-Ur-JhR" customClass="PhotoAlbumViewController" customModule="VirtualTourist" sceneMemberID="viewController">
+                <viewController restorationIdentifier="PhotoAlbumViewController" storyboardIdentifier="PhotoAlbumViewController" id="NcS-Ur-JhR" customClass="PhotoAlbumViewController" customModule="VirtualTourist" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="U5B-7v-mXq">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -66,29 +67,42 @@
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="FZg-Pt-L0r">
                                 <rect key="frame" x="0.0" y="88" width="414" height="150"/>
                             </mapView>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" restorationIdentifier="CollectionViewController" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Nfo-Bw-hUi">
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="Nfo-Bw-hUi">
                                 <rect key="frame" x="0.0" y="237" width="414" height="576"/>
                                 <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
-                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="5wS-5q-pKm">
-                                    <size key="itemSize" width="50" height="50"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="0.0" minimumInteritemSpacing="0.0" id="5wS-5q-pKm">
+                                    <size key="itemSize" width="120" height="120"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
+                                <label key="backgroundView" hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="No Images" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="eCB-kt-So1">
+                                    <rect key="frame" x="0.0" y="0.0" width="414" height="576"/>
+                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                    <nil key="textColor"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="PhotoCell" id="jvK-OA-EaA" customClass="PhotoCell" customModule="VirtualTourist">
-                                        <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="kgE-ZJ-doK">
-                                            <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Qh-SZ-jAz">
-                                                    <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="4Qh-SZ-jAz">
+                                                    <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                                 </imageView>
                                             </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="trailing" secondItem="4Qh-SZ-jAz" secondAttribute="trailing" id="gPT-vj-f25"/>
+                                                <constraint firstAttribute="bottom" secondItem="4Qh-SZ-jAz" secondAttribute="bottom" id="mjn-jz-5R7"/>
+                                                <constraint firstItem="4Qh-SZ-jAz" firstAttribute="leading" secondItem="kgE-ZJ-doK" secondAttribute="leading" id="qKX-2I-NYe"/>
+                                                <constraint firstItem="4Qh-SZ-jAz" firstAttribute="top" secondItem="kgE-ZJ-doK" secondAttribute="top" id="tdA-NQ-4TB"/>
+                                            </constraints>
                                         </collectionViewCellContentView>
+                                        <size key="customSize" width="120" height="120"/>
                                         <connections>
                                             <outlet property="imageView" destination="4Qh-SZ-jAz" id="zTj-f8-V35"/>
                                         </connections>
@@ -122,12 +136,14 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="collectionView" destination="Nfo-Bw-hUi" id="lNg-d5-JJy"/>
                         <outlet property="mapView" destination="FZg-Pt-L0r" id="pbY-zh-Jw0"/>
+                        <outlet property="text" destination="eCB-kt-So1" id="xJO-Dw-TCW"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="H52-46-eo7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1471" y="115"/>
+            <point key="canvasLocation" x="1469.5652173913045" y="114.50892857142857"/>
         </scene>
     </scenes>
     <resources>

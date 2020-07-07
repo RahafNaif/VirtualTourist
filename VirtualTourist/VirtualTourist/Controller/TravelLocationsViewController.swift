@@ -8,11 +8,16 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
     
+//    var dataController = DataController.dataController
+    
+    let dataContext = AppDelegate().persistentContainer.viewContext
+    var storedLocations = [Pin]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +25,11 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         mapView.delegate = self
         let longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(longTap))
         mapView.addGestureRecognizer(longTapGesture)
+        
+        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        if let storePin = try? dataContext.fetch(fetchRequest){
+            storedLocations = storePin
+        }
     }
     
     @objc func longTap(sender: UIGestureRecognizer){
@@ -27,15 +37,31 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         if sender.state == .began {
             let locationInView = sender.location(in: mapView)
             let locationOnMap = mapView.convert(locationInView, toCoordinateFrom: mapView)
+            let pin =
+            NSEntityDescription.entity(forEntityName: "Pin", in:
+                dataContext)
+            let newPin = NSManagedObject(entity: pin!, insertInto: dataContext)
+                    newPin.setValue(locationOnMap.latitude , forKey:
+            "latitude")
+                    newPin.setValue(locationOnMap.longitude , forKey:
+            "longitude")
+//            let pin = Pin(context: dataController.viewContext)
+//            pin.latitude = locationOnMap.latitude
+//            pin.longitude = locationOnMap.longitude
+            try? dataContext.save()
+            
             addAnnotation(location: locationOnMap)
         }
     }
 
     func addAnnotation(location: CLLocationCoordinate2D){
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = location
-            annotation.title = "Info"
-            self.mapView.addAnnotation(annotation)
+            
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = location
+        annotation.title = "Info"
+        self.mapView.addAnnotation(annotation)
+        
+           
     }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {

@@ -14,7 +14,7 @@ class API {
     
     class func photoRequest(lat:Double,long:Double,completionHandler: @escaping (photos?,Error?) -> Void) {
         
-        var request = URLRequest(url: URL(string: "https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=\(api_key)&tags=&accuracy=11&lat=\(lat)&lon=\(long)&per_page=9&format=json&nojsoncallback=1" )!)
+        var request = URLRequest(url: URL(string: "https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=\(api_key)&tags=&accuracy=11&lat=\(lat)&lon=\(long)&per_page=12&format=json&nojsoncallback=1" )!)
         
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -23,9 +23,11 @@ class API {
               completionHandler(nil, error)
               return
           }
+          
           let decoder = JSONDecoder()
           let photo = try! decoder.decode(photos.self, from: data)
           completionHandler(photo , error)
+          
             print(String(data: data, encoding: .utf8)!)
         }
         task.resume()
