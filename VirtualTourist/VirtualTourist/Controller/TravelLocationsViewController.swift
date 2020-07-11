@@ -14,9 +14,8 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
     
-//    var dataController = DataController.dataController
-    
-    let dataContext = AppDelegate().persistentContainer.viewContext
+    var dataController : DataController!
+
     var storedLocations = [Pin]()
     
     override func viewDidLoad() {
@@ -27,9 +26,8 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         mapView.addGestureRecognizer(longTapGesture)
         
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        if let storePin = try? dataContext.fetch(fetchRequest){
-            storedLocations = storePin
-        }
+        try? dataController.viewContext.fetch(fetchRequest)
+            
     }
     
     @objc func longTap(sender: UIGestureRecognizer){
@@ -37,18 +35,18 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         if sender.state == .began {
             let locationInView = sender.location(in: mapView)
             let locationOnMap = mapView.convert(locationInView, toCoordinateFrom: mapView)
-            let pin =
-            NSEntityDescription.entity(forEntityName: "Pin", in:
-                dataContext)
-            let newPin = NSManagedObject(entity: pin!, insertInto: dataContext)
-                    newPin.setValue(locationOnMap.latitude , forKey:
-            "latitude")
-                    newPin.setValue(locationOnMap.longitude , forKey:
-            "longitude")
-//            let pin = Pin(context: dataController.viewContext)
-//            pin.latitude = locationOnMap.latitude
-//            pin.longitude = locationOnMap.longitude
-            try? dataContext.save()
+//            let pin =
+//            NSEntityDescription.entity(forEntityName: "Pin", in:
+//                dataController)
+//            let newPin = NSManagedObject(entity: pin!, insertInto: dataController)
+//                    newPin.setValue(locationOnMap.latitude , forKey:
+//            "latitude")
+//                    newPin.setValue(locationOnMap.longitude , forKey:
+//            "longitude")
+            let pin = Pin(context: dataController.viewContext)
+            pin.latitude = locationOnMap.latitude
+            pin.longitude = locationOnMap.longitude
+            try? dataController.viewContext.save()
             
             addAnnotation(location: locationOnMap)
         }

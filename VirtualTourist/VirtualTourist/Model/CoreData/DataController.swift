@@ -11,7 +11,6 @@ import CoreData
 
 class DataController {
     
-    static let dataController = DataController(modelName: "VirtualTourist")
     let persistentContainer : NSPersistentContainer
     var viewContext:NSManagedObjectContext {
         return persistentContainer.viewContext
