@@ -12,17 +12,17 @@ import CoreData
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var window: UIWindow?
-   let dataController = DataController(modelName: "VirtualTourist")
+//    var window: UIWindow?
+//    let dataController = DataController(modelName: "VirtualTourist")
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        dataController.load()
+       // dataController.load()
       
         
-        if let rootVC = window?.rootViewController as? TravelLocationsViewController {
-            rootVC.dataController = dataController
-        }
+//        if let rootVC = window?.rootViewController as? TravelLocationsViewController {
+//            rootVC.dataController = dataController
+//        }
         
         return true
     }

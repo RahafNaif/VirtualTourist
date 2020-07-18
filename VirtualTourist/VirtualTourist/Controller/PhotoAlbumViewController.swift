@@ -8,15 +8,23 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,MKMapViewDelegate {
+class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,MKMapViewDelegate ,NSFetchedResultsControllerDelegate{
     
     static var coordinate = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var text: UILabel!
+    @IBOutlet weak var newCollection: UIBarButtonItem!
     
-    var photosList = [photoInfo]()
+    //var photosList = [photoInfo]()
+    //var imageUrlList : [PhotoAlbum] = []
+    var dataController : DataController!
+    var pin:Pin!
+    var fetchedResultsController:NSFetchedResultsController<PhotoAlbum>!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,21 +38,23 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
         annotation.coordinate = PhotoAlbumViewController.coordinate
         self.mapView.addAnnotation(annotation)
         
-        API.photoRequest(lat: PhotoAlbumViewController.coordinate.latitude, long: PhotoAlbumViewController.coordinate.longitude, completionHandler: {(photos,error) in
-            self.photosList = (photos?.photos.photo)!
-            if photos?.photos.total == "0"{
-                DispatchQueue.main.async{
-                    self.text.isHidden = false
-                }
-            }
-            
-            DispatchQueue.main.async{
-                self.collectionView.reloadData()
-            }
-            
-        })
+        setUpFetch()
         
+        if fetchedResultsController.fetchedObjects!.isEmpty {
+            APIRequest()
+            newCollection.isEnabled = false
+
+        }
+        
+        let tapped = UITapGestureRecognizer(target: self, action: #selector(tap))
+        collectionView.addGestureRecognizer(tapped)
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setUpFetch()
+    }
+    
     
     func zoomingMap(_ location: CLLocationCoordinate2D, mapView: MKMapView) {
         let regionRadius: CLLocationDistance = 1000
@@ -76,22 +86,32 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return self.photosList.count
+        return fetchedResultsController.fetchedObjects?.count ?? 1
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCell
-        let photo = self.photosList[(indexPath as NSIndexPath).row]
+       
+//        if fetchedResultsController.fetchedObjects!.isEmpty {
+//            let photo = self.photosList[(indexPath as NSIndexPath).row]
+//            addPhotoAlbum(imageUrl: photo.imageUrl.absoluteString)
+//            cell.imageView.load(url: photo.imageUrl)
         
-        // Set the name and image
-        cell.imageView.load(url: photo.imageUrl)
+      
+        let photo = fetchedResultsController.object(at: indexPath).imageUrl
+        cell.imageView.load(url: URL(string: photo!)!)
+        
         
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath:IndexPath) {
         
+//        deletePhoto(at: indexPath)
+//        collectionView.delete(indexPath)
+        
+    
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
@@ -112,19 +132,73 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
         return 0
     }
    
+    func addPhotoAlbum(photos : [photoInfo]){
+        
+        //let photo = PhotoAlbum(context: dataController.viewContext)
+        for image in photos {
+            let photo = PhotoAlbum(context: dataController.viewContext)
+            photo.imageUrl = image.imageUrl.absoluteString
+             photo.location = pin
+        }
+       
+        try! dataController.viewContext.save()
+        
+    }
     
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-//        let numberOfItemsPerRow:CGFloat = 3
-//        let spacingBetweenCells:CGFloat = 2
-//
-//        let totalSpacing = (2 * self.spacing) + ((numberOfItemsPerRow - 1) * spacingBetweenCells) //Amount of total spacing in a row
-//
-//        if let collection = self.collectionView{
-//            let width = (collection.bounds.width - totalSpacing)/numberOfItemsPerRow
-//            return CGSize(width: width, height: width)
-//        }else{
-//            return CGSize(width: 0, height: 0)
-//        }
-//    }
+    func deletePhoto(at indexPath : IndexPath){
+        
+        let photo = fetchedResultsController.object(at: indexPath)
+        dataController.viewContext.delete(photo)
+        try? dataController.viewContext.save()
+        
+    }
+    
+    fileprivate func setUpFetch() {
+        let fetchRequest:NSFetchRequest<PhotoAlbum> = PhotoAlbum.fetchRequest()
+        let predicate = NSPredicate(format: "location == %@", pin)
+        fetchRequest.predicate = predicate
+        let sortDescriptor = NSSortDescriptor(key: "imageUrl", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchedResultsController.delegate = self
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
+        self.collectionView.reloadData()
+       
+    }
+    
+    fileprivate func APIRequest() {
+        API.photoRequest(lat: PhotoAlbumViewController.coordinate.latitude, long: PhotoAlbumViewController.coordinate.longitude, completionHandler: {(photos,error) in
+            //self.photosList = (photos?.photos.photo)!
+            self.addPhotoAlbum(photos: (photos?.photos.photo)!)
+            if photos?.photos.total == "0"{
+                DispatchQueue.main.async{
+                    self.text.isHidden = false
+                }
+            }
+            
+            DispatchQueue.main.async{
+                self.collectionView.reloadData()
+            }
+        })
+    }
+    
+    @IBAction func newCollection(_ sender: Any) {
+        
+    }
+    
+    @objc func tap(sender: UIGestureRecognizer){
+
+        if let indexPath = self.collectionView?.indexPathForItem(at: sender.location(in: self.collectionView)) {
+            
+            collectionView.deleteItems(at: [indexPath])
+            //deletePhoto(at: indexPath)
+            collectionView.reloadData()
+        }
+    }
     
 }
+

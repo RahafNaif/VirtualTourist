@@ -125,7 +125,11 @@
                     </view>
                     <toolbarItems>
                         <barButtonItem width="127" style="plain" systemItem="fixedSpace" id="LaI-L6-mRC"/>
-                        <barButtonItem title="New Collection" id="Soo-d3-HcV"/>
+                        <barButtonItem title="New Collection" id="Soo-d3-HcV">
+                            <connections>
+                                <action selector="newCollection:" destination="NcS-Ur-JhR" id="wvc-KP-Q5s"/>
+                            </connections>
+                        </barButtonItem>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="797-xh-Wd5">
                         <barButtonItem key="leftBarButtonItem" title="OK" image="chevron.left" catalog="system" id="obF-t8-Ixg">
@@ -138,6 +142,7 @@
                     <connections>
                         <outlet property="collectionView" destination="Nfo-Bw-hUi" id="lNg-d5-JJy"/>
                         <outlet property="mapView" destination="FZg-Pt-L0r" id="pbY-zh-Jw0"/>
+                        <outlet property="newCollection" destination="Soo-d3-HcV" id="35d-yo-Ee4"/>
                         <outlet property="text" destination="eCB-kt-So1" id="xJO-Dw-TCW"/>
                     </connections>
                 </viewController>

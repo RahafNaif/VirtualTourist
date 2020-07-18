@@ -10,13 +10,14 @@ import UIKit
 import MapKit
 import CoreData
 
-class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
+class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetchedResultsControllerDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
     
     var dataController : DataController!
+    //var storedLocation: [Pin] = []
+    var fetchedResultsController:NSFetchedResultsController<Pin>!
 
-    var storedLocations = [Pin]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,8 +27,17 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         mapView.addGestureRecognizer(longTapGesture)
         
         let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        try? dataController.viewContext.fetch(fetchRequest)
-            
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        fetchedResultsController.delegate = self
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+        }
+        
+        addAnnotation()
     }
     
     @objc func longTap(sender: UIGestureRecognizer){
@@ -43,23 +53,37 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
 //            "latitude")
 //                    newPin.setValue(locationOnMap.longitude , forKey:
 //            "longitude")
-            let pin = Pin(context: dataController.viewContext)
-            pin.latitude = locationOnMap.latitude
-            pin.longitude = locationOnMap.longitude
-            try? dataController.viewContext.save()
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = locationOnMap
+            annotation.title = "Info"
+            self.mapView.addAnnotation(annotation)
+            addPin(location: locationOnMap)
             
-            addAnnotation(location: locationOnMap)
+            
         }
     }
 
-    func addAnnotation(location: CLLocationCoordinate2D){
+    func addPin(location: CLLocationCoordinate2D){
+
+        let pin = Pin(context: dataController.viewContext)
+        pin.latitude = location.latitude
+        pin.longitude = location.longitude
+        //let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+        try? dataController.viewContext.save()
+
+    }
+    
+    func addAnnotation(){
+        var annotations = [MKPointAnnotation]()
+        for pin in fetchedResultsController.fetchedObjects! {
+            let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = coordinate
+            annotation.title = "Info"
+            annotations.append(annotation)
             
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = location
-        annotation.title = "Info"
-        self.mapView.addAnnotation(annotation)
-        
-           
+        }
+        mapView.addAnnotations(annotations)
     }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -79,14 +103,36 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate {
         
         return pinView
     }
-    
-    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
-        if control == view.rightCalloutAccessoryView {
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        if let tapped = view.annotation?.title{
             PhotoAlbumViewController.coordinate = view.annotation!.coordinate
-            performSegue(withIdentifier: "PhotoAlbum", sender: self)
+            for pin in fetchedResultsController.fetchedObjects! {
+                if view.annotation?.coordinate.latitude == pin.latitude && view.annotation?.coordinate.longitude == pin.longitude {
+                        performSegue(withIdentifier: "PhotoAlbum", sender: pin)
+                }
+            }
+            
         }
     }
+//    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+//        if control == view.rightCalloutAccessoryView {
+//            PhotoAlbumViewController.coordinate = view.annotation!.coordinate
+//
+////            let vc = PhotoAlbumViewController(nibName: nil, bundle: nil)
+////            vc.dataController = dataController
+////            navigationController?.pushViewController(vc, animated: true)
+//
+//            performSegue(withIdentifier: "PhotoAlbum", sender: self)
+//        }
+//    }
     
-    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "PhotoAlbum"{
+            let nav = segue.destination as! UINavigationController
+            let vc = nav.topViewController as! PhotoAlbumViewController
+            vc.pin = sender as! Pin
+            vc.dataController = dataController
+        }
+    }
     
 }
