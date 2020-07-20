@@ -105,7 +105,7 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
         return pinView
     }
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        
+        // for save updates after create
         setUpFetch()
         
         if let tapped = view.annotation?.title{
