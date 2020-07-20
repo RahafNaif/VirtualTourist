@@ -106,14 +106,6 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath:IndexPath) {
-        
-//        deletePhoto(at: indexPath)
-//        collectionView.delete(indexPath)
-        
-    
-    }
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         
         return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
@@ -134,15 +126,13 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
    
     func addPhotoAlbum(photos : [photoInfo]){
         
-        //let photo = PhotoAlbum(context: dataController.viewContext)
         for image in photos {
             let photo = PhotoAlbum(context: dataController.viewContext)
-            photo.imageUrl = image.imageUrl.absoluteString
+             photo.imageUrl = image.imageUrl.absoluteString
              photo.location = pin
+             photo.creationDate = Date()
         }
-       
         try! dataController.viewContext.save()
-        
     }
     
     func deletePhoto(at indexPath : IndexPath){
@@ -157,7 +147,7 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
         let fetchRequest:NSFetchRequest<PhotoAlbum> = PhotoAlbum.fetchRequest()
         let predicate = NSPredicate(format: "location == %@", pin)
         fetchRequest.predicate = predicate
-        let sortDescriptor = NSSortDescriptor(key: "imageUrl", ascending: false)
+        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         fetchedResultsController.delegate = self
@@ -187,7 +177,14 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
     }
     
     @IBAction func newCollection(_ sender: Any) {
-        
+        if let album = fetchedResultsController.fetchedObjects {
+        for photo in album {
+            self.fetchedResultsController.managedObjectContext.delete(photo)
+            try? self.dataController.viewContext.save()
+        }
+      }
+        APIRequest()
+        newCollection.isEnabled = false
     }
     
     @objc func tap(sender: UIGestureRecognizer){
@@ -195,8 +192,25 @@ class PhotoAlbumViewController :UIViewController, UICollectionViewDelegate, UICo
         if let indexPath = self.collectionView?.indexPathForItem(at: sender.location(in: self.collectionView)) {
             
             collectionView.deleteItems(at: [indexPath])
-            //deletePhoto(at: indexPath)
-            collectionView.reloadData()
+            deletePhoto(at: indexPath)
+            
+        }
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        collectionView.reloadData()
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        switch type {
+        case .insert:
+            collectionView.insertItems(at: [newIndexPath!])
+            break
+        case .delete:
+            collectionView.deleteItems(at: [indexPath!])
+            break
+        default: break
+            
         }
     }
     

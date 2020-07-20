@@ -15,9 +15,19 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
     @IBOutlet weak var mapView: MKMapView!
     
     var dataController : DataController!
-    //var storedLocation: [Pin] = []
-    var fetchedResultsController:NSFetchedResultsController<Pin>!
+    var storedLocation: [Pin] = []
+    let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+    //var fetchedResultsController:NSFetchedResultsController<Pin>!
 
+    
+    fileprivate func setUpFetch() {
+        //let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        if let storePin = try? dataController.viewContext.fetch(fetchRequest){
+            storedLocation = storePin
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,16 +36,14 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
         let longTapGesture = UILongPressGestureRecognizer(target: self, action: #selector(longTap))
         mapView.addGestureRecognizer(longTapGesture)
         
-        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
-        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
-        fetchRequest.sortDescriptors = [sortDescriptor]
-        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        fetchedResultsController.delegate = self
-        do {
-            try fetchedResultsController.performFetch()
-        } catch {
-            fatalError("The fetch could not be performed: \(error.localizedDescription)")
-        }
+        setUpFetch()
+//        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+//        fetchedResultsController.delegate = self
+//        do {
+//            try fetchedResultsController.performFetch()
+//        } catch {
+//            fatalError("The fetch could not be performed: \(error.localizedDescription)")
+//        }
         
         addAnnotation()
     }
@@ -45,14 +53,7 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
         if sender.state == .began {
             let locationInView = sender.location(in: mapView)
             let locationOnMap = mapView.convert(locationInView, toCoordinateFrom: mapView)
-//            let pin =
-//            NSEntityDescription.entity(forEntityName: "Pin", in:
-//                dataController)
-//            let newPin = NSManagedObject(entity: pin!, insertInto: dataController)
-//                    newPin.setValue(locationOnMap.latitude , forKey:
-//            "latitude")
-//                    newPin.setValue(locationOnMap.longitude , forKey:
-//            "longitude")
+
             let annotation = MKPointAnnotation()
             annotation.coordinate = locationOnMap
             annotation.title = "Info"
@@ -75,7 +76,7 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
     
     func addAnnotation(){
         var annotations = [MKPointAnnotation]()
-        for pin in fetchedResultsController.fetchedObjects! {
+        for pin in storedLocation {
             let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
             let annotation = MKPointAnnotation()
             annotation.coordinate = coordinate
@@ -104,25 +105,28 @@ class TravelLocationsViewController: UIViewController,MKMapViewDelegate,NSFetche
         return pinView
     }
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        
+        setUpFetch()
+        
         if let tapped = view.annotation?.title{
             PhotoAlbumViewController.coordinate = view.annotation!.coordinate
-            for pin in fetchedResultsController.fetchedObjects! {
+            for pin in storedLocation {
                 if view.annotation?.coordinate.latitude == pin.latitude && view.annotation?.coordinate.longitude == pin.longitude {
                         performSegue(withIdentifier: "PhotoAlbum", sender: pin)
                 }
             }
-            
+
         }
     }
+    
 //    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
 //        if control == view.rightCalloutAccessoryView {
 //            PhotoAlbumViewController.coordinate = view.annotation!.coordinate
-//
-////            let vc = PhotoAlbumViewController(nibName: nil, bundle: nil)
-////            vc.dataController = dataController
-////            navigationController?.pushViewController(vc, animated: true)
-//
-//            performSegue(withIdentifier: "PhotoAlbum", sender: self)
+//            for pin in storedLocation {
+//                if view.annotation?.coordinate.latitude == pin.latitude && view.annotation?.coordinate.longitude == pin.longitude {
+//                        performSegue(withIdentifier: "PhotoAlbum", sender: pin)
+//                }
+//            }
 //        }
 //    }
     
